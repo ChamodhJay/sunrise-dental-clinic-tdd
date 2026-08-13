@@ -8,3 +8,7 @@
 *.iml
 .DS_Store
 *.log
+/IMPLEMENTATION_REPORT.md
+/UML_UPDATE_REQUIREMENTS.md
+*web.xml
+*index.jsp
