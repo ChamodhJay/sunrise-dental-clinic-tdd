@@ -7,6 +7,7 @@ import com.icbt.model.Bill;
 import com.icbt.model.BillLine;
 import com.icbt.model.StaffRole;
 import com.icbt.model.StaffUser;
+import com.icbt.model.TreatmentRecord;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -52,7 +53,7 @@ public class BillingServiceTest {
                 .thenReturn(AppointmentStatus.COMPLETED);
 
         when(appointment.getTreatmentRecord())
-                .thenReturn(mock(Object.class));
+                .thenReturn(mock(TreatmentRecord.class));
     }
 
     @Test
