@@ -1,4 +1,3 @@
-```java
 package com.icbt.service;
 
 import com.icbt.dao.BillDAO;
@@ -8,6 +7,8 @@ import com.icbt.model.Bill;
 import com.icbt.model.BillLine;
 import com.icbt.model.StaffRole;
 import com.icbt.model.StaffUser;
+import com.icbt.model.TreatmentRecord;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,11 +50,13 @@ public class BillingServiceTest {
         appointment = mock(Appointment.class);
         receptionist = user(StaffRole.RECEPTIONIST, true);
 
+        TreatmentRecord treatmentRecord = mock(TreatmentRecord.class);
+
         when(appointment.getStatus())
                 .thenReturn(AppointmentStatus.COMPLETED);
 
         when(appointment.getTreatmentRecord())
-                .thenReturn(mock(Object.class));
+                .thenReturn(treatmentRecord);
     }
 
     @Test
@@ -218,4 +221,4 @@ public class BillingServiceTest {
                 LocalDateTime.of(2026, 8, 1, 9, 0));
     }
 }
-```
+
