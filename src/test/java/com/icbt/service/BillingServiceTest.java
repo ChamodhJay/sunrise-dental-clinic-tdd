@@ -1,4 +1,3 @@
-```java
 package com.icbt.service;
 
 import com.icbt.dao.BillDAO;
@@ -218,4 +217,3 @@ public class BillingServiceTest {
                 LocalDateTime.of(2026, 8, 1, 9, 0));
     }
 }
-```
