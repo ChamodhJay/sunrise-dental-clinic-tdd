@@ -10,9 +10,16 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
-
 public final class CatalogueService {
-    private final ReferenceDataDAO referenceDataDAO = new ReferenceDataDAO();
+    private final ReferenceDataDAO referenceDataDAO;
+
+    public CatalogueService() {
+        this(new ReferenceDataDAO());
+    }
+
+    CatalogueService(ReferenceDataDAO referenceDataDAO) {
+        this.referenceDataDAO = referenceDataDAO;
+    }
 
     public List<TreatmentType> treatments(StaffUser user) {
         requireManager(user);

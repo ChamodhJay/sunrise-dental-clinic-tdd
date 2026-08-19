@@ -19,17 +19,13 @@ import java.util.UUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-/**
- * Tests for CatalogueService which manages treatments and clinic fees.
- * Applies TDD principles as the CatalogueService class itself will be
- * driven by these tests.
- */
 public class CatalogueServiceTest {
 
     private ReferenceDataDAO referenceDataDAO;
@@ -47,94 +43,104 @@ public class CatalogueServiceTest {
 
     @Test
     public void saveTreatmentDelegatesToDaoWhenUserIsManager() {
-        UUID treatmentId = UUID.randomUUID();
+        String treatmentId = UUID.randomUUID().toString();
         String name = "Root Canal";
-        BigDecimal price = new BigDecimal("4500.00");
+        String price = "4500.00";
 
         catalogueService.saveTreatment(manager, treatmentId, name, price, true);
 
-        verify(referenceDataDAO).saveTreatment(treatmentId, name, price, true, manager);
+        verify(referenceDataDAO).saveTreatment(UUID.fromString(treatmentId), name, new BigDecimal(price), true, manager);
     }
 
     @Test
     public void onlyManagerCanSaveTreatment() {
         StaffUser dentist = user(StaffRole.DENTIST, true);
-        UUID treatmentId = UUID.randomUUID();
+        String treatmentId = UUID.randomUUID().toString();
         
         SecurityException exception = assertThrows(
                 SecurityException.class,
-                () -> catalogueService.saveTreatment(dentist, treatmentId, "Clean", new BigDecimal("100"), true));
+                () -> catalogueService.saveTreatment(dentist, treatmentId, "Clean", "100.00", true));
 
-        assertEquals("Only an active clinic manager may maintain treatments.", exception.getMessage());
+        assertEquals("Only the clinic manager can maintain catalogue and fee data.", exception.getMessage());
         verifyNoInteractions(referenceDataDAO);
     }
 
-    // ------------------------------------------------------------------ updateConsultationFee
+    // ------------------------------------------------------------------ changeConsultationFee
 
     @Test
-    public void updateConsultationFeeReturnsNewFeeSchedule() {
-        BigDecimal fee = new BigDecimal("1500.00");
-        LocalDate effectiveFrom = LocalDate.of(2026, 9, 1);
+    public void changeConsultationFeeReturnsNewFeeSchedule() {
+        String fee = "1500.00";
         ClinicFeeSchedule schedule = mock(ClinicFeeSchedule.class);
 
-        when(referenceDataDAO.replaceActiveFee(fee, effectiveFrom, manager)).thenReturn(schedule);
+        when(referenceDataDAO.replaceActiveFee(eq(new BigDecimal(fee)), any(LocalDate.class), eq(manager)))
+                .thenReturn(schedule);
 
-        ClinicFeeSchedule result = catalogueService.updateConsultationFee(manager, fee, effectiveFrom);
+        ClinicFeeSchedule result = catalogueService.changeConsultationFee(manager, fee);
 
         assertSame(schedule, result);
-        verify(referenceDataDAO).replaceActiveFee(fee, effectiveFrom, manager);
+        verify(referenceDataDAO).replaceActiveFee(eq(new BigDecimal(fee)), any(LocalDate.class), eq(manager));
     }
 
     @Test
     public void feeCannotBeNegative() {
-        BigDecimal fee = new BigDecimal("-100.00");
-        LocalDate effectiveFrom = LocalDate.now();
+        String fee = "-100.00";
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> catalogueService.updateConsultationFee(manager, fee, effectiveFrom));
+        BusinessRuleException exception = assertThrows(
+                BusinessRuleException.class,
+                () -> catalogueService.changeConsultationFee(manager, fee));
 
-        assertEquals("Consultation fee must not be negative", exception.getMessage());
+        assertEquals("Enter a non-negative consultation fee.", exception.getMessage());
         verifyNoInteractions(referenceDataDAO);
     }
 
     @Test
-    public void onlyManagerCanUpdateConsultationFee() {
+    public void onlyManagerCanChangeConsultationFee() {
         StaffUser receptionist = user(StaffRole.RECEPTIONIST, true);
-        BigDecimal fee = new BigDecimal("1500.00");
+        String fee = "1500.00";
 
         SecurityException exception = assertThrows(
                 SecurityException.class,
-                () -> catalogueService.updateConsultationFee(receptionist, fee, LocalDate.now()));
+                () -> catalogueService.changeConsultationFee(receptionist, fee));
 
-        assertEquals("Only an active clinic manager may change fees.", exception.getMessage());
+        assertEquals("Only the clinic manager can maintain catalogue and fee data.", exception.getMessage());
         verifyNoInteractions(referenceDataDAO);
     }
 
     // ------------------------------------------------------------------ Queries
 
     @Test
-    public void findActiveTreatmentTypesDelegatesToDao() {
+    public void treatmentsDelegatesToDao() {
         List<TreatmentType> expected = List.of(mock(TreatmentType.class));
-        when(referenceDataDAO.findTreatmentTypes(true)).thenReturn(expected);
+        when(referenceDataDAO.findTreatmentTypes(false)).thenReturn(expected);
 
-        List<TreatmentType> actual = catalogueService.activeTreatmentTypes();
+        List<TreatmentType> actual = catalogueService.treatments(manager);
 
         assertSame(expected, actual);
-        verify(referenceDataDAO).findTreatmentTypes(true);
+        verify(referenceDataDAO).findTreatmentTypes(false);
     }
 
     @Test
-    public void findActiveFeeScheduleDelegatesToDao() {
+    public void activeFeeDelegatesToDao() {
         ClinicFeeSchedule expected = mock(ClinicFeeSchedule.class);
         when(referenceDataDAO.findActiveFeeSchedule()).thenReturn(Optional.of(expected));
 
-        Optional<ClinicFeeSchedule> actual = catalogueService.activeFee();
+        ClinicFeeSchedule actual = catalogueService.activeFee(manager);
 
-        assertSame(expected, actual.orElse(null));
+        assertSame(expected, actual);
         verify(referenceDataDAO).findActiveFeeSchedule();
     }
     
+    @Test
+    public void activeFeeThrowsWhenNoneExists() {
+        when(referenceDataDAO.findActiveFeeSchedule()).thenReturn(Optional.empty());
+
+        BusinessRuleException exception = assertThrows(
+                BusinessRuleException.class,
+                () -> catalogueService.activeFee(manager));
+                
+        assertEquals("No active consultation fee is configured.", exception.getMessage());
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private StaffUser user(StaffRole role, boolean active) {
