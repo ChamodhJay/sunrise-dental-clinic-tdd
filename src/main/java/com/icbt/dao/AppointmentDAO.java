@@ -33,12 +33,12 @@ public final class AppointmentDAO {
                    p.created_at AS patient_created_at,
                    d.dentist_id AS d_dentist_id, d.booking_enabled AS d_booking_enabled,
                    du.user_id AS du_user_id, du.username AS du_username,
-                   du.password_hash AS du_password_hash, du.full_name AS du_full_name,
+                   '' AS du_password_hash, du.full_name AS du_full_name,
                    du.role AS du_role, du.active AS du_active, du.created_at AS du_created_at,
                    t.treatment_type_id AS t_treatment_type_id, t.name AS t_treatment_name,
                    t.base_price AS t_base_price, t.active AS t_treatment_active,
                    ru.user_id AS ru_user_id, ru.username AS ru_username,
-                   ru.password_hash AS ru_password_hash, ru.full_name AS ru_full_name,
+                   '' AS ru_password_hash, ru.full_name AS ru_full_name,
                    ru.role AS ru_role, ru.active AS ru_active, ru.created_at AS ru_created_at,
                    tr.treatment_record_id, tr.diagnosis, tr.treatment_notes,
                    tr.completed_at, tr.created_at AS treatment_created_at
@@ -55,7 +55,7 @@ public final class AppointmentDAO {
                               TreatmentType treatmentType, StaffUser registeredBy) {
         UUID candidatePatientId = UUID.randomUUID();
         UUID appointmentId = UUID.randomUUID();
-        String call = "{CALL sp_register_appointment(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+        String call = StoredProgramDefinition.REGISTER_APPOINTMENT;
         try (Connection connection = DBConnectionFactory.getConnection();
              CallableStatement statement = connection.prepareCall(call)) {
             statement.setString(1, candidatePatientId.toString());
@@ -129,7 +129,7 @@ public final class AppointmentDAO {
     }
 
     public void recordTreatment(UUID appointmentId, UUID dentistId, String diagnosis, String notes) {
-        String call = "{CALL sp_record_treatment(?, ?, ?, ?, ?)}";
+        String call = StoredProgramDefinition.RECORD_TREATMENT;
         try (Connection connection = DBConnectionFactory.getConnection();
              CallableStatement statement = connection.prepareCall(call)) {
             statement.setString(1, UUID.randomUUID().toString());

@@ -5,6 +5,7 @@ import javax.crypto.spec.PBEKeySpec;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Base64;
 
 public final class PasswordHasher {
@@ -12,16 +13,27 @@ public final class PasswordHasher {
     private static final int ITERATIONS = 120_000;
     private static final int KEY_BITS = 256;
     private static final int SALT_BYTES = 16;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     public String hash(char[] password) {
+        if (password == null) {
+            throw new IllegalArgumentException("Password is required");
+        }
         byte[] salt = new byte[SALT_BYTES];
-        new SecureRandom().nextBytes(salt);
+        SECURE_RANDOM.nextBytes(salt);
         byte[] derived = derive(password, salt, ITERATIONS);
-        return "pbkdf2$" + ITERATIONS + "$" + Base64.getEncoder().encodeToString(salt)
-                + "$" + Base64.getEncoder().encodeToString(derived);
+        try {
+            return "pbkdf2$" + ITERATIONS + "$" + Base64.getEncoder().encodeToString(salt)
+                    + "$" + Base64.getEncoder().encodeToString(derived);
+        } finally {
+            Arrays.fill(derived, (byte) 0);
+        }
     }
 
     public boolean verify(char[] password, String encodedHash) {
+        if (password == null || encodedHash == null) {
+            return false;
+        }
         try {
             String[] parts = encodedHash.split("\\$");
             if (parts.length != 4 || !"pbkdf2".equals(parts[0])) {
@@ -33,8 +45,15 @@ public final class PasswordHasher {
             }
             byte[] salt = Base64.getDecoder().decode(parts[2]);
             byte[] expected = Base64.getDecoder().decode(parts[3]);
+            if (salt.length != SALT_BYTES || expected.length != KEY_BITS / Byte.SIZE) {
+                return false;
+            }
             byte[] actual = derive(password, salt, iterations);
-            return MessageDigest.isEqual(expected, actual);
+            try {
+                return MessageDigest.isEqual(expected, actual);
+            } finally {
+                Arrays.fill(actual, (byte) 0);
+            }
         } catch (IllegalArgumentException exception) {
             return false;
         }

@@ -14,7 +14,7 @@ import java.io.IOException;
 @WebServlet("/catalogue")
 public final class CatalogueController extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private CatalogueService catalogueService;
+    private transient CatalogueService catalogueService;
 
     @Override
     public void init() {
@@ -31,13 +31,16 @@ public final class CatalogueController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            if ("fee".equals(request.getParameter("action"))) {
+            String action = request.getParameter("action");
+            if ("fee".equals(action)) {
                 catalogueService.changeConsultationFee(WebSupport.user(request),
                         request.getParameter("consultationFee"));
-            } else {
+            } else if ("treatment".equals(action)) {
                 catalogueService.saveTreatment(WebSupport.user(request), request.getParameter("treatmentId"),
                         request.getParameter("name"), request.getParameter("price"),
                         "true".equals(request.getParameter("active")));
+            } else {
+                throw new BusinessRuleException("Select a valid catalogue action.");
             }
             response.sendRedirect(request.getContextPath() + "/catalogue?saved=1");
         } catch (BusinessRuleException exception) {

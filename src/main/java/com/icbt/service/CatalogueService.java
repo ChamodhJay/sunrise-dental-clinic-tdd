@@ -7,10 +7,12 @@ import com.icbt.model.StaffUser;
 import com.icbt.model.TreatmentType;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 public final class CatalogueService {
+    private static final BigDecimal MAX_DATABASE_AMOUNT = new BigDecimal("9999999999.99");
     private final ReferenceDataDAO referenceDataDAO;
 
     public CatalogueService() {
@@ -56,8 +58,8 @@ public final class CatalogueService {
 
     private BigDecimal parseMoney(String value, String errorMessage) {
         try {
-            BigDecimal amount = new BigDecimal(value).setScale(2);
-            if (amount.signum() < 0) {
+            BigDecimal amount = new BigDecimal(value).setScale(2, RoundingMode.UNNECESSARY);
+            if (amount.signum() < 0 || amount.compareTo(MAX_DATABASE_AMOUNT) > 0) {
                 throw new NumberFormatException();
             }
             return amount;

@@ -13,6 +13,7 @@ import java.util.Base64;
 public final class WebSupport {
     public static final String AUTH_USER = "authUser";
     public static final String CSRF_TOKEN = "csrfToken";
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private WebSupport() { }
 
@@ -25,7 +26,7 @@ public final class WebSupport {
         String token = (String) session.getAttribute(CSRF_TOKEN);
         if (token == null) {
             byte[] random = new byte[32];
-            new SecureRandom().nextBytes(random);
+            SECURE_RANDOM.nextBytes(random);
             token = Base64.getUrlEncoder().withoutPadding().encodeToString(random);
             session.setAttribute(CSRF_TOKEN, token);
         }

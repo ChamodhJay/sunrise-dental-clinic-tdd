@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS bill_number_sequence (
 
 CREATE TABLE IF NOT EXISTS bill (
   bill_id CHAR(36) PRIMARY KEY,
-  bill_number VARCHAR(30) NOT NULL UNIQUE,
+  bill_number VARCHAR(40) NOT NULL UNIQUE,
   appointment_id CHAR(36) NOT NULL UNIQUE,
   generated_by CHAR(36) NOT NULL,
   fee_schedule_id CHAR(36) NOT NULL,
@@ -114,6 +114,9 @@ CREATE TABLE IF NOT EXISTS bill (
   CONSTRAINT fk_bill_staff FOREIGN KEY (generated_by) REFERENCES staff_user(user_id),
   CONSTRAINT fk_bill_fee FOREIGN KEY (fee_schedule_id) REFERENCES clinic_fee_schedule(fee_schedule_id)
 ) ENGINE=InnoDB;
+
+-- Rerunnable migration for databases created by an earlier schema revision.
+ALTER TABLE bill MODIFY bill_number VARCHAR(40) NOT NULL;
 
 CREATE TABLE IF NOT EXISTS bill_line (
   bill_line_id CHAR(36) PRIMARY KEY,
@@ -339,7 +342,8 @@ main: BEGIN
   SET v_sequence = LAST_INSERT_ID();
   SET o_appointment_number = CONCAT(
     'APT-', DATE_FORMAT(p_appointment_date, '%y%m%d'), '-',
-    LPAD(v_sequence, 4, '0')
+    LPAD(CAST(v_sequence AS CHAR),
+         GREATEST(4, CHAR_LENGTH(CAST(v_sequence AS CHAR))), '0')
   );
   SET o_appointment_created_at = CURRENT_TIMESTAMP;
 
@@ -430,7 +434,7 @@ CREATE PROCEDURE sp_create_bill(
   IN p_bill_id CHAR(36),
   IN p_appointment_id CHAR(36),
   IN p_generated_by CHAR(36),
-  OUT o_bill_number VARCHAR(30)
+  OUT o_bill_number VARCHAR(40)
 )
 main: BEGIN
   DECLARE v_count INT;
@@ -440,6 +444,7 @@ main: BEGIN
   DECLARE v_fee_schedule_id CHAR(36);
   DECLARE v_consultation_fee DECIMAL(12,2);
   DECLARE v_total DECIMAL(12,2);
+  DECLARE v_locked_appointment_id CHAR(36);
 
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
   BEGIN
@@ -456,6 +461,20 @@ main: BEGIN
     SIGNAL SQLSTATE '45000'
       SET MYSQL_ERRNO = 31201,
           MESSAGE_TEXT = 'Only an active receptionist may generate a bill';
+  END IF;
+
+  -- Lock the appointment before checking for an existing bill. Without this
+  -- lock, two concurrent requests can both observe no bill and race into the
+  -- unique appointment_id constraint.
+  SET v_locked_appointment_id = NULL;
+  SELECT appointment_id INTO v_locked_appointment_id
+  FROM appointment
+  WHERE appointment_id = p_appointment_id
+  FOR UPDATE;
+  IF v_locked_appointment_id IS NULL THEN
+    SIGNAL SQLSTATE '45000'
+      SET MYSQL_ERRNO = 31202,
+          MESSAGE_TEXT = 'Billing requires a completed appointment and treatment record';
   END IF;
 
   SELECT COUNT(*) INTO v_count
@@ -499,7 +518,9 @@ main: BEGIN
   INSERT INTO bill_number_sequence (created_at) VALUES (CURRENT_TIMESTAMP);
   SET v_sequence = LAST_INSERT_ID();
   SET o_bill_number = CONCAT(
-    'BILL-', DATE_FORMAT(CURRENT_DATE, '%y%m%d'), '-', LPAD(v_sequence, 4, '0')
+    'BILL-', DATE_FORMAT(CURRENT_DATE, '%y%m%d'), '-',
+    LPAD(CAST(v_sequence AS CHAR),
+         GREATEST(4, CHAR_LENGTH(CAST(v_sequence AS CHAR))), '0')
   );
 
   INSERT INTO bill
@@ -535,7 +556,7 @@ BEGIN
           MESSAGE_TEXT = 'Only an active clinic manager may maintain treatments';
   END IF;
   IF p_name IS NULL OR CHAR_LENGTH(TRIM(p_name)) = 0
-     OR p_base_price IS NULL OR p_base_price < 0 THEN
+     OR p_base_price IS NULL OR p_base_price < 0 OR p_active IS NULL THEN
     SIGNAL SQLSTATE '45000'
       SET MYSQL_ERRNO = 31302,
           MESSAGE_TEXT = 'Treatment name and non-negative price are required';

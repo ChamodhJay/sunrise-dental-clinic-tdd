@@ -94,6 +94,16 @@ public class CatalogueServiceTest {
     }
 
     @Test
+    public void feeOutsideDatabaseDecimalRangeIsRejectedBeforeJdbc() {
+        BusinessRuleException exception = assertThrows(
+                BusinessRuleException.class,
+                () -> catalogueService.changeConsultationFee(manager, "10000000000.00"));
+
+        assertEquals("Enter a non-negative consultation fee.", exception.getMessage());
+        verifyNoInteractions(referenceDataDAO);
+    }
+
+    @Test
     public void onlyManagerCanChangeConsultationFee() {
         StaffUser receptionist = user(StaffRole.RECEPTIONIST, true);
         String fee = "1500.00";

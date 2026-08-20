@@ -35,4 +35,9 @@ public final class StaffUser implements Serializable {
     public boolean isActive() { return active; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public boolean hasRole(StaffRole requiredRole) { return active && role == requiredRole; }
+
+    public StaffUser asSessionPrincipal() {
+        return passwordHash.isEmpty() ? this : new StaffUser(
+                userId, username, "", fullName, role, active, createdAt);
+    }
 }

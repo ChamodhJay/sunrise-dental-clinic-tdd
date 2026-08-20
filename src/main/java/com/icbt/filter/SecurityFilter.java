@@ -23,7 +23,15 @@ import java.util.Optional;
 
 @WebFilter("/*")
 public final class SecurityFilter implements Filter {
-    private final StaffUserDAO staffUserDAO = new StaffUserDAO();
+    private final StaffUserDAO staffUserDAO;
+
+    public SecurityFilter() {
+        this(new StaffUserDAO());
+    }
+
+    SecurityFilter(StaffUserDAO staffUserDAO) {
+        this.staffUserDAO = staffUserDAO;
+    }
 
     @Override
     public void init(FilterConfig filterConfig) { }
@@ -31,33 +39,58 @@ public final class SecurityFilter implements Filter {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
                          FilterChain chain) throws IOException, ServletException {
-        HttpServletRequest request = (HttpServletRequest) servletRequest;
-        HttpServletResponse response = (HttpServletResponse) servletResponse;
+        if (!(servletRequest instanceof HttpServletRequest request)
+                || !(servletResponse instanceof HttpServletResponse response)) {
+            chain.doFilter(servletRequest, servletResponse);
+            return;
+        }
         request.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setHeader("X-Content-Type-Options", "nosniff");
         response.setHeader("X-Frame-Options", "DENY");
         response.setHeader("Referrer-Policy", "same-origin");
         response.setHeader("Cache-Control", "no-store");
+        response.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+        if (request.isSecure()) {
+            response.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+        }
         response.setHeader("Content-Security-Policy",
                 "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self' 'unsafe-inline'");
 
-        HttpSession session = request.getSession(true);
-        WebSupport.ensureCsrfToken(session);
-        if ("POST".equalsIgnoreCase(request.getMethod()) && !validCsrf(request, session)) {
-            WebSupport.error(request, response, HttpServletResponse.SC_FORBIDDEN,
-                    "This form expired or could not be verified. Reload the page and try again.");
+        if ("TRACE".equalsIgnoreCase(request.getMethod())) {
+            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
             return;
         }
 
         String path = request.getServletPath();
+        HttpSession session = request.getSession(false);
+        if (path == null || path.isEmpty() || path.equals("/") || path.equals("/index.jsp")) {
+            Object principal = session == null ? null : session.getAttribute(WebSupport.AUTH_USER);
+            String destination = principal instanceof StaffUser ? "/dashboard" : "/login";
+            response.sendRedirect(request.getContextPath() + destination);
+            return;
+        }
         if (isPublic(path)) {
+            if ("/login".equals(path)) {
+                if (session == null) {
+                    session = request.getSession(true);
+                }
+                WebSupport.ensureCsrfToken(session);
+                if (requiresCsrf(request) && !validCsrf(request, session)) {
+                    csrfError(request, response);
+                    return;
+                }
+            }
             chain.doFilter(request, response);
             return;
         }
 
-        StaffUser sessionUser = (StaffUser) session.getAttribute(WebSupport.AUTH_USER);
+        Object principal = session == null ? null : session.getAttribute(WebSupport.AUTH_USER);
+        StaffUser sessionUser = principal instanceof StaffUser ? (StaffUser) principal : null;
         if (sessionUser == null || !sessionUser.isActive()) {
+            if (session != null) {
+                session.invalidate();
+            }
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
@@ -71,10 +104,16 @@ public final class SecurityFilter implements Filter {
                 return;
             }
             user = currentUser.get();
-            session.setAttribute(WebSupport.AUTH_USER, user);
+            session.setAttribute(WebSupport.AUTH_USER, user.asSessionPrincipal());
         } catch (DataAccessException exception) {
             WebSupport.error(request, response, HttpServletResponse.SC_SERVICE_UNAVAILABLE,
                     "The database is unavailable. Your request could not be authorized safely.");
+            return;
+        }
+
+        WebSupport.ensureCsrfToken(session);
+        if (requiresCsrf(request) && !validCsrf(request, session)) {
+            csrfError(request, response);
             return;
         }
 
@@ -94,8 +133,21 @@ public final class SecurityFilter implements Filter {
                 expected.getBytes(StandardCharsets.UTF_8), supplied.getBytes(StandardCharsets.UTF_8));
     }
 
+    private boolean requiresCsrf(HttpServletRequest request) {
+        String method = request.getMethod();
+        return !("GET".equalsIgnoreCase(method)
+                || "HEAD".equalsIgnoreCase(method)
+                || "OPTIONS".equalsIgnoreCase(method));
+    }
+
+    private void csrfError(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        WebSupport.error(request, response, HttpServletResponse.SC_FORBIDDEN,
+                "This form expired or could not be verified. Reload the page and try again.");
+    }
+
     private boolean isPublic(String path) {
-        return path.equals("/") || path.equals("/index.jsp") || path.equals("/login")
+        return path.equals("/login")
                 || path.startsWith("/assets/");
     }
 

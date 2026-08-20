@@ -23,6 +23,11 @@ and re-signals the original error. This prevents partially registered
 appointments, treatment records without completion, incomplete bills, and a
 clinic with no active consultation fee after a failed change.
 
+Appointment and bill numbers retain four-digit zero-padding for small values
+without truncating sequence values after 9,999. `sp_create_bill` locks the
+appointment before its idempotency check so concurrent requests return the same
+bill instead of racing into the unique constraint.
+
 ## Function
 
 `fn_calculate_bill_total(treatmentPrice, consultationFee)` is deterministic and

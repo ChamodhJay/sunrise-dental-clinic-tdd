@@ -4,6 +4,7 @@ import com.icbt.model.ClinicFeeSchedule;
 import com.icbt.model.Dentist;
 import com.icbt.model.StaffUser;
 import com.icbt.model.TreatmentType;
+import com.icbt.service.BusinessRuleException;
 
 import java.math.BigDecimal;
 import java.sql.CallableStatement;
@@ -22,7 +23,7 @@ public final class ReferenceDataDAO {
     private static final String DENTIST_COLUMNS = """
             d.dentist_id AS d_dentist_id, d.booking_enabled AS d_booking_enabled,
             u.user_id AS su_user_id, u.username AS su_username,
-            u.password_hash AS su_password_hash, u.full_name AS su_full_name,
+            '' AS su_password_hash, u.full_name AS su_full_name,
             u.role AS su_role, u.active AS su_active, u.created_at AS su_created_at
             """;
 
@@ -115,7 +116,7 @@ public final class ReferenceDataDAO {
 
     public void saveTreatment(UUID treatmentTypeId, String name, BigDecimal price,
                               boolean active, StaffUser manager) {
-        String call = "{CALL sp_save_treatment(?, ?, ?, ?, ?)}";
+        String call = StoredProgramDefinition.SAVE_TREATMENT;
         try (Connection connection = DBConnectionFactory.getConnection();
              CallableStatement statement = connection.prepareCall(call)) {
             statement.setString(1, treatmentTypeId.toString());
@@ -125,9 +126,17 @@ public final class ReferenceDataDAO {
             statement.setString(5, manager.getUserId().toString());
             statement.execute();
         } catch (SQLException exception) {
-            if (exception.getErrorCode() == 31301) {
+            if (hasErrorCode(exception, 31301)) {
                 throw new SecurityException(
                         "Only an active clinic manager may maintain treatments", exception);
+            }
+            if (hasErrorCode(exception, 31302)) {
+                throw new BusinessRuleException(
+                        "Treatment name and non-negative price are required.");
+            }
+            if (hasErrorCode(exception, 31303, 1062)) {
+                throw new BusinessRuleException(
+                        "Another treatment already uses that name.");
             }
             throw new DataAccessException("Could not save the treatment type", exception);
         }
@@ -136,7 +145,7 @@ public final class ReferenceDataDAO {
     public ClinicFeeSchedule replaceActiveFee(BigDecimal fee, LocalDate effectiveFrom,
                                                StaffUser manager) {
         UUID id = UUID.randomUUID();
-        String call = "{CALL sp_replace_active_fee(?, ?, ?, ?)}";
+        String call = StoredProgramDefinition.REPLACE_ACTIVE_FEE;
         try (Connection connection = DBConnectionFactory.getConnection();
              CallableStatement statement = connection.prepareCall(call)) {
             statement.setString(1, id.toString());
@@ -146,11 +155,28 @@ public final class ReferenceDataDAO {
             statement.execute();
             return new ClinicFeeSchedule(id, fee, effectiveFrom, true);
         } catch (SQLException exception) {
-            if (exception.getErrorCode() == 31401) {
+            if (hasErrorCode(exception, 31401)) {
                 throw new SecurityException("Only an active clinic manager may change fees", exception);
+            }
+            if (hasErrorCode(exception, 31402)) {
+                throw new BusinessRuleException(
+                        "A non-negative consultation fee and effective date are required.");
             }
             throw new DataAccessException("Could not update the consultation fee", exception);
         }
+    }
+
+    private boolean hasErrorCode(SQLException exception, int... expectedCodes) {
+        SQLException current = exception;
+        while (current != null) {
+            for (int expectedCode : expectedCodes) {
+                if (current.getErrorCode() == expectedCode) {
+                    return true;
+                }
+            }
+            current = current.getNextException();
+        }
+        return false;
     }
 
     private ClinicFeeSchedule mapFee(ResultSet resultSet) throws SQLException {

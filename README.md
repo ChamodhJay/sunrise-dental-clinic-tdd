@@ -21,7 +21,7 @@ The bill formula is deliberately limited to the assignment-approved rule:
 ## Prerequisites
 
 - JDK 17
-- Maven 3.8+
+- Maven 3.8.1+
 - MySQL 8
 - A Servlet 4 container such as Apache Tomcat 9 (Tomcat 10 uses the incompatible
   `jakarta.servlet` namespace)
@@ -37,12 +37,14 @@ The bill formula is deliberately limited to the assignment-approved rule:
    Re-run this script when upgrading an existing project database; it installs
    the stored procedures, function, and triggers without deleting clinic data.
 
-2. If necessary, configure `SUNRISE_DB_URL`, `SUNRISE_DB_USER`, and
-   `SUNRISE_DB_PASSWORD`. See `database/README.md`.
+2. Configure `SUNRISE_DB_USER` and `SUNRISE_DB_PASSWORD`. Override
+   `SUNRISE_DB_URL` when the database is not on the default local address.
+   The application deliberately has no built-in database credentials. See
+   `database/README.md`.
 3. Build and test:
 
    ```text
-   mvn clean test package
+   mvn clean verify
    ```
 
 4. Verify the advanced database features against MySQL:
@@ -57,10 +59,9 @@ The bill formula is deliberately limited to the assignment-approved rule:
 
 ## Continuous integration
 
-`.github/workflows/maven.yml` runs a clean Java 17 Maven test and WAR packaging
-build for every GitHub push and pull request. The workflow verifies compilation
-and automated tests; it does not replace the required authenticated MySQL and
-Tomcat browser smoke test.
+`.github/workflows/maven.yml` runs a clean Java 17 Maven test, SpotBugs analysis,
+and WAR packaging build for every GitHub push and pull request. The workflow
+does not replace the required authenticated MySQL and Tomcat browser smoke test.
 
 ## Architectural notes
 
@@ -77,8 +78,9 @@ Tomcat browser smoke test.
 - A deterministic SQL function implements the approved bill formula. Targeted
   triggers enforce cross-table staff-role and lifecycle rules when writes come
   from outside the web application. See `database/STORED_PROGRAMS.md`.
-- Passwords use salted PBKDF2-SHA256; login throttling locks an account/client
-  pair for 30 seconds after three failures.
+- Passwords use salted PBKDF2-SHA256. Login performs a dummy password check for
+  unknown accounts, and bounded throttling locks an account/client pair for 30
+  seconds after three failures without allowing unbounded in-memory state.
 - A single security filter applies UTF-8, CSRF validation, live account-status
   refresh, server-side role checks and baseline browser security headers.
 - The authenticated receptionist JSON endpoint

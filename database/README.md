@@ -4,14 +4,18 @@
 2. Run `mysql -u root -p < database/schema.sql` from the project directory.
    The script is rerunnable: tables and seed data are preserved while stored
    routines and triggers are replaced with their current definitions.
-3. Configure the application with environment variables when the defaults are not suitable:
-   - `SUNRISE_DB_URL`
-   - `SUNRISE_DB_USER`
-   - `SUNRISE_DB_PASSWORD`
+3. Configure the application credentials before starting Tomcat:
+   - `SUNRISE_DB_USER` (required)
+   - `SUNRISE_DB_PASSWORD` (required; use a restricted application account)
+   - `SUNRISE_DB_URL` (optional)
 
-The default URL is `jdbc:mysql://127.0.0.1:3306/sunrise_dental`. No password is
-embedded in Java source. The blank default password exists only for common local
-XAMPP classroom installations; use an environment variable for any other setup.
+The default URL targets `jdbc:mysql://127.0.0.1:3306/sunrise_dental`, uses the
+driver's preferred TLS mode, and applies finite connection/socket timeouts. No
+database username or password is embedded in Java source. Do not run the web
+application as MySQL `root`; grant its account only the table and routine access
+needed by this schema. A local classroom server with an intentionally blank
+password must still set the password explicitly, for example with the JVM
+property `-Dsunrise.db.password=`.
 
 Demonstration accounts created by `schema.sql`:
 
