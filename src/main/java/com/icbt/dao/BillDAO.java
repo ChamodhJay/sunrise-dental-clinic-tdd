@@ -25,7 +25,7 @@ public final class BillDAO {
     private static final String BILL_SELECT = """
             SELECT b.bill_id, b.bill_number, b.total_amount, b.status AS bill_status, b.generated_at,
                    u.user_id AS gu_user_id, u.username AS gu_username,
-                   u.password_hash AS gu_password_hash, u.full_name AS gu_full_name,
+                   '' AS gu_password_hash, u.full_name AS gu_full_name,
                    u.role AS gu_role, u.active AS gu_active, u.created_at AS gu_created_at,
                    f.fee_schedule_id, f.consultation_fee, f.effective_from, f.active AS fee_active,
                    l.bill_line_id, l.line_type, l.description, l.amount
@@ -46,7 +46,7 @@ public final class BillDAO {
     }
 
     public Bill createForCompletedAppointment(Appointment appointment, StaffUser generatedBy) {
-        String call = "{CALL sp_create_bill(?, ?, ?, ?)}";
+        String call = StoredProgramDefinition.CREATE_BILL;
         try (Connection connection = DBConnectionFactory.getConnection();
              CallableStatement statement = connection.prepareCall(call)) {
             statement.setString(1, UUID.randomUUID().toString());

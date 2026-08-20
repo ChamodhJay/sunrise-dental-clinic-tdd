@@ -17,7 +17,7 @@ import java.util.Arrays;
 @WebServlet("/users")
 public final class UserAccountController extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private UserAccountService userAccountService;
+    private transient UserAccountService userAccountService;
 
     @Override
     public void init() {

@@ -21,7 +21,6 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -71,16 +70,28 @@ public class AuthenticationServiceTest {
     }
 
     @Test
-    public void inactiveAccountIsRejectedWithoutCheckingPassword() {
+    public void inactiveAccountIsRejectedAfterConstantWorkPasswordCheck() {
         StaffUser inactiveUser = staffUser(false);
         when(userDAO.findByUsername("reception")).thenReturn(Optional.of(inactiveUser));
+        when(passwordHasher.verify(any(char[].class), eq("stored-hash"))).thenReturn(true);
 
         AuthenticationException exception = assertThrows(AuthenticationException.class,
                 () -> authenticationService.authenticate(
                         "reception", "correct-password".toCharArray(), CLIENT_ADDRESS));
 
         assertEquals("Invalid username or password", exception.getMessage());
-        verify(passwordHasher, never()).verify(any(char[].class), any(String.class));
+        verify(passwordHasher).verify(any(char[].class), eq("stored-hash"));
+    }
+
+    @Test
+    public void unknownAccountPerformsDummyPasswordCheckAndHandlesNullPassword() {
+        when(userDAO.findByUsername("unknown")).thenReturn(Optional.empty());
+
+        AuthenticationException exception = assertThrows(AuthenticationException.class,
+                () -> authenticationService.authenticate("unknown", null, CLIENT_ADDRESS));
+
+        assertEquals("Invalid username or password", exception.getMessage());
+        verify(passwordHasher).verify(any(char[].class), any(String.class));
     }
 
     @Test

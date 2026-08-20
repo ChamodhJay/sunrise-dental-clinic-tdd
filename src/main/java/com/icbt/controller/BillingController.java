@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets;
 @WebServlet("/billing")
 public final class BillingController extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private BillingService billingService;
+    private transient BillingService billingService;
 
     @Override
     public void init() {
@@ -36,8 +36,12 @@ public final class BillingController extends HttpServlet {
         try {
             request.setAttribute("bill", billingService.findBill(appointmentNumber));
             request.getRequestDispatcher("/WEB-INF/view/billing.jsp").forward(request, response);
-        } catch (NotFoundException | BusinessRuleException exception) {
+        } catch (NotFoundException exception) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            request.setAttribute("billingError", exception.getMessage());
+            request.getRequestDispatcher("/WEB-INF/view/billing.jsp").forward(request, response);
+        } catch (BusinessRuleException exception) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             request.setAttribute("billingError", exception.getMessage());
             request.getRequestDispatcher("/WEB-INF/view/billing.jsp").forward(request, response);
         } catch (DataAccessException exception) {
@@ -68,6 +72,9 @@ public final class BillingController extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_CONFLICT);
             request.setAttribute("billingError", exception.getMessage());
             request.getRequestDispatcher("/WEB-INF/view/billing.jsp").forward(request, response);
+        } catch (SecurityException exception) {
+            WebSupport.error(request, response, HttpServletResponse.SC_FORBIDDEN,
+                    "Only a receptionist can generate or print patient bills.");
         } catch (DataAccessException exception) {
             databaseError(request, response);
         }

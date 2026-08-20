@@ -16,7 +16,7 @@ import java.io.PrintWriter;
 @WebServlet("/api/appointments")
 public final class AppointmentApiController extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private AppointmentService appointmentService;
+    private transient AppointmentService appointmentService;
 
     @Override
     public void init() {

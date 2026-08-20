@@ -3,6 +3,7 @@ package com.icbt.service;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 public class PasswordHasherTest {
@@ -25,5 +26,13 @@ public class PasswordHasherTest {
                 "pbkdf2$120000$ZGVudGlzdC1zZWVkMDAwMQ==$zKmap+JKr/EpYdZKnq/vMr8H2wTOzj/JTe5N+kY/+7o="));
         assertTrue(hasher.verify("Manager@123".toCharArray(),
                 "pbkdf2$120000$bWFuYWdlci1zZWVkMDAwMQ==$3ykvhzaog703PFA9ERGh9nZGoMIYgNV06EitF+oqaag="));
+    }
+
+    @Test
+    public void nullAndMalformedHashesAreRejectedWithoutCrashing() {
+        assertFalse(hasher.verify("password".toCharArray(), null));
+        assertFalse(hasher.verify(null, "pbkdf2$120000$bad$bad"));
+        assertFalse(hasher.verify("password".toCharArray(), "pbkdf2$120000$bad$bad"));
+        assertThrows(IllegalArgumentException.class, () -> hasher.hash(null));
     }
 }

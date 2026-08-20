@@ -17,7 +17,7 @@ import java.util.UUID;
 @WebServlet("/dentist/appointments")
 public final class DentistController extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private AppointmentService appointmentService;
+    private transient AppointmentService appointmentService;
 
     @Override
     public void init() {

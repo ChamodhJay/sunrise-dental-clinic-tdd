@@ -15,15 +15,21 @@ import java.util.Optional;
 import java.util.UUID;
 
 public final class StaffUserDAO {
-    private static final String USER_COLUMNS = """
+    private static final String USER_COLUMNS_WITH_PASSWORD = """
             SELECT user_id AS su_user_id, username AS su_username,
                    password_hash AS su_password_hash, full_name AS su_full_name,
                    role AS su_role, active AS su_active, created_at AS su_created_at
             FROM staff_user
             """;
+    private static final String USER_COLUMNS = """
+            SELECT user_id AS su_user_id, username AS su_username,
+                   '' AS su_password_hash, full_name AS su_full_name,
+                   role AS su_role, active AS su_active, created_at AS su_created_at
+            FROM staff_user
+            """;
 
     public Optional<StaffUser> findByUsername(String username) {
-        return findOne(USER_COLUMNS + " WHERE LOWER(username) = LOWER(?)", username);
+        return findOne(USER_COLUMNS_WITH_PASSWORD + " WHERE LOWER(username) = LOWER(?)", username);
     }
 
     public Optional<StaffUser> findById(UUID userId) {
@@ -48,7 +54,7 @@ public final class StaffUserDAO {
 
     public StaffUser create(UUID userId, UUID dentistId, String username, String passwordHash,
                             String fullName, String role, StaffUser manager) {
-        String call = "{CALL sp_create_staff_user(?, ?, ?, ?, ?, ?, ?)}";
+        String call = StoredProgramDefinition.CREATE_STAFF_USER;
         try (Connection connection = DBConnectionFactory.getConnection();
              CallableStatement statement = connection.prepareCall(call)) {
             statement.setString(1, userId.toString());
@@ -68,7 +74,7 @@ public final class StaffUserDAO {
     }
 
     public void resetPassword(UUID userId, String passwordHash, StaffUser manager) {
-        String call = "{CALL sp_reset_staff_password(?, ?, ?)}";
+        String call = StoredProgramDefinition.RESET_STAFF_PASSWORD;
         try (Connection connection = DBConnectionFactory.getConnection();
              CallableStatement statement = connection.prepareCall(call)) {
             statement.setString(1, userId.toString());
@@ -81,7 +87,7 @@ public final class StaffUserDAO {
     }
 
     public void setActive(UUID userId, boolean active, StaffUser manager) {
-        String call = "{CALL sp_set_staff_active(?, ?, ?)}";
+        String call = StoredProgramDefinition.SET_STAFF_ACTIVE;
         try (Connection connection = DBConnectionFactory.getConnection();
              CallableStatement statement = connection.prepareCall(call)) {
             statement.setString(1, userId.toString());

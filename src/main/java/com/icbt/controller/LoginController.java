@@ -17,7 +17,7 @@ import java.util.Arrays;
 @WebServlet("/login")
 public final class LoginController extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private AuthenticationService authenticationService;
+    private transient AuthenticationService authenticationService;
 
     @Override
     public void init() {
@@ -48,7 +48,7 @@ public final class LoginController extends HttpServlet {
             }
             HttpSession session = request.getSession(true);
             session.setMaxInactiveInterval(20 * 60);
-            session.setAttribute(WebSupport.AUTH_USER, user);
+            session.setAttribute(WebSupport.AUTH_USER, user.asSessionPrincipal());
             WebSupport.ensureCsrfToken(session);
             response.sendRedirect(request.getContextPath() + "/dashboard");
         } catch (AuthenticationException exception) {

@@ -9,11 +9,10 @@ presence of required database protections. Runtime tests must verify JDBC,
 stored programs, sessions, role routing, HTML forms, and browser printing in the
 deployed environment.
 
-The current workspace has no Git history from which a test-first chronology can
-be demonstrated. The automated tests are valid regression evidence, but they
-must not be presented as proof that every feature was originally developed by
-strict TDD. The report should explain the actual red-green-refactor examples
-only where contemporaneous commit or screenshot evidence exists.
+Automated tests are valid regression evidence, but a passing suite alone does
+not prove that every feature was originally developed with strict TDD. The
+report should claim red-green-refactor chronology only where contemporaneous
+commit or screenshot evidence exists.
 
 ## Automated test data
 
@@ -33,12 +32,12 @@ only where contemporaneous commit or screenshot evidence exists.
 Run:
 
 ```text
-mvn clean test
+mvn clean verify
 ```
 
-Verified on 13 August 2026: **21 tests passed, 0 failures, 0 errors, 0 skipped**.
-The GitHub Actions workflow also runs `mvn clean verify` after the repository is
-published.
+Verified on 20 August 2026: **88 tests passed, 0 failures, 0 errors, 0 skipped**.
+The same command also packages the WAR and runs the medium-or-higher SpotBugs
+gate used by GitHub Actions.
 
 ## Required runtime test cases
 
