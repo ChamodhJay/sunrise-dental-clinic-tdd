@@ -44,6 +44,20 @@ public final class ReferenceDataDAO {
         }
     }
 
+    public int countActiveDentists() {
+        String sql = "SELECT COUNT(*) FROM dentist d JOIN staff_user u "
+                + "ON u.user_id = d.staff_user_id WHERE d.booking_enabled = TRUE "
+                + "AND u.active = TRUE AND u.role = 'DENTIST'";
+        try (Connection connection = DBConnectionFactory.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+            return resultSet.next() ? resultSet.getInt(1) : 0;
+        } catch (SQLException exception) {
+            throw new DataAccessException("Could not count active dentists", exception);
+        }
+    }
+
+
     public Optional<Dentist> findDentistById(UUID dentistId) {
         return findDentist("d.dentist_id = ?", dentistId);
     }

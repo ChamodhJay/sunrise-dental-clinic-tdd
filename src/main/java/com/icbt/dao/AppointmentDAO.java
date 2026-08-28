@@ -128,6 +128,37 @@ public final class AppointmentDAO {
         return findMany(sql, null, date);
     }
 
+    public int countForDate(LocalDate date) {
+        String sql = "SELECT COUNT(*) FROM appointment WHERE appointment_date = ?";
+        try (Connection connection = DBConnectionFactory.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setDate(1, Date.valueOf(date));
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? resultSet.getInt(1) : 0;
+            }
+        } catch (SQLException exception) {
+            throw new DataAccessException("Could not count today's appointments", exception);
+        }
+    }
+
+    public int countCompletedThisMonth(LocalDate monthOf) {
+        String sql = """
+                SELECT COUNT(*) FROM treatment_record tr
+                JOIN appointment a ON a.appointment_id = tr.appointment_id
+                WHERE YEAR(tr.completed_at) = ? AND MONTH(tr.completed_at) = ?
+                """;
+        try (Connection connection = DBConnectionFactory.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, monthOf.getYear());
+            statement.setInt(2, monthOf.getMonthValue());
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? resultSet.getInt(1) : 0;
+            }
+        } catch (SQLException exception) {
+            throw new DataAccessException("Could not count completed visits", exception);
+        }
+    }
+
     public void recordTreatment(UUID appointmentId, UUID dentistId, String diagnosis, String notes) {
         String call = StoredProgramDefinition.RECORD_TREATMENT;
         try (Connection connection = DBConnectionFactory.getConnection();
