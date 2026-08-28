@@ -2,29 +2,191 @@
 <header class="site-header no-print">
   <div class="header-inner">
     <a class="brand" href="${pageContext.request.contextPath}/dashboard">
-      Sunrise Dental Clinic
-      <small>Appointment and Patient Management System</small>
+      <div class="logo-box">
+      <div class="logo-circle">
+  <svg width="36" height="36" viewBox="0 0 36 36" fill="none"
+       xmlns="http://www.w3.org/2000/svg">
+
+    <!-- Sunrise -->
+    <path d="M8 17a10 10 0 0 1 20 0"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"/>
+
+    <!-- Sun rays -->
+    <path d="M18 4v4"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"/>
+    <path d="M10 7l2.5 2.5"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"/>
+    <path d="M26 7l-2.5 2.5"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"/>
+
+    <!-- Tooth -->
+    <path d="M12.5 15.5
+             C10.5 13.5 8 14.5 8.5 18
+             C9 21.5 10.5 24 11.5 27
+             C12 29 13 30 14 29
+             C15 28 15 25 18 25
+             C21 25 21 28 22 29
+             C23 30 24 29 24.5 27
+             C25.5 24 27 21.5 27.5 18
+             C28 14.5 25.5 13.5 23.5 15.5
+             C22 17 20.5 17.5 18 17.5
+             C15.5 17.5 14 17 12.5 15.5Z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linejoin="round"/>
+
+    <!-- S -->
+    <path d="M20.8 19
+             C20.2 18.4 19.3 18.2 18.5 18.5
+             C17.5 18.8 17.5 20 18.5 20.4
+             L20 21
+             C21 21.4 21 22.6 20 23
+             C19.1 23.4 18.1 23.2 17.5 22.6"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"/>
+
+  </svg>
+</div>
+      </div>
+      <div>
+        Sunrise Dental
+        <small>Clinic management</small>
+      </div>
     </a>
+    
+    <div class="nav-section-title">Workspace</div>
+    
     <nav class="main-nav" aria-label="Main navigation">
-      <a href="${pageContext.request.contextPath}/dashboard">Dashboard</a>
+      <a href="${pageContext.request.contextPath}/dashboard">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        <span class="nav-text">
+          Overview
+          <small class="nav-desc">Your clinic at a glance</small>
+        </span>
+      </a>
+      
       <c:if test="${sessionScope.authUser.role.name() eq 'RECEPTIONIST'}">
-        <a href="${pageContext.request.contextPath}/appointments?action=new">New appointment</a>
-        <a href="${pageContext.request.contextPath}/appointments">Find appointment</a>
-        <a href="${pageContext.request.contextPath}/billing">Billing</a>
+        <a href="${pageContext.request.contextPath}/appointments?action=new">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M8 2v4"/><path d="M16 2v4"/><path d="M21 13V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8"/><path d="M3 10h18"/><path d="M19 16v6"/><path d="M16 19h6"/></svg>
+          <span class="nav-text">
+            New appointment
+            <small class="nav-desc">Register a patient</small>
+          </span>
+        </a>
+        <a href="${pageContext.request.contextPath}/appointments">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
+          <span class="nav-text">
+            Appointments
+            <small class="nav-desc">Find and review visits</small>
+          </span>
+        </a>
+        <a href="${pageContext.request.contextPath}/billing">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+          <span class="nav-text">
+            Billing
+            <small class="nav-desc">Receipts and payments</small>
+          </span>
+        </a>
       </c:if>
+      
       <c:if test="${sessionScope.authUser.role.name() eq 'DENTIST'}">
-        <a href="${pageContext.request.contextPath}/dentist/appointments">My appointments</a>
+        <a href="${pageContext.request.contextPath}/dentist/appointments">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
+          <span class="nav-text">
+            My appointments
+            <small class="nav-desc">View assigned patients</small>
+          </span>
+        </a>
       </c:if>
+      
       <c:if test="${sessionScope.authUser.role.name() eq 'CLINIC_MANAGER'}">
-        <a href="${pageContext.request.contextPath}/reports">Reports</a>
-        <a href="${pageContext.request.contextPath}/catalogue">Catalogue &amp; fees</a>
-        <a href="${pageContext.request.contextPath}/users">User accounts</a>
+        <a href="${pageContext.request.contextPath}/reports">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+          <span class="nav-text">
+            Reports
+            <small class="nav-desc">Operational summaries</small>
+          </span>
+        </a>
+        <a href="${pageContext.request.contextPath}/catalogue">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+          <span class="nav-text">
+            Catalogue &amp; fees
+            <small class="nav-desc">Treatments and pricing</small>
+          </span>
+        </a>
+        <a href="${pageContext.request.contextPath}/users">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="nav-text">
+            User accounts
+            <small class="nav-desc">Staff access management</small>
+          </span>
+        </a>
       </c:if>
-      <a href="${pageContext.request.contextPath}/help">Help</a>
-      <form class="logout-form" action="${pageContext.request.contextPath}/logout" method="post">
-        <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
-        <button class="link-button" type="submit">Exit</button>
-      </form>
+      
+      <a href="${pageContext.request.contextPath}/help">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+        <span class="nav-text">
+          Help center
+          <small class="nav-desc">Guides and support</small>
+        </span>
+      </a>
     </nav>
+    
+    <div class="user-profile-nav">
+      <div class="avatar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      </div>
+      <div class="user-info">
+        <strong><c:out value="${sessionScope.authUser.fullName}" /></strong>
+        <span>${sessionScope.authUser.role.name()}</span>
+      </div>
+    </div>
+    
+    <form class="logout-form" action="${pageContext.request.contextPath}/logout" method="post">
+      <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+      <button class="link-button" type="submit" style="display: flex; align-items: center; gap: 8px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign out
+      </button>
+    </form>
   </div>
 </header>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const currentPath = window.location.pathname;
+    const currentUrl = currentPath + window.location.search;
+    const links = document.querySelectorAll(".main-nav a");
+    let activeLink = null;
+    let matchScore = 0;
+    
+    links.forEach(link => {
+      const href = link.getAttribute("href");
+      if (!href) return;
+      
+      if (href === currentUrl) {
+        activeLink = link;
+        matchScore = 100;
+      } else if (href === currentPath && matchScore < 100) {
+        activeLink = link;
+        matchScore = 50;
+      } else if (currentPath.startsWith(href + "/") && matchScore < 50) {
+        if (href.length > matchScore) {
+          activeLink = link;
+          matchScore = href.length;
+        }
+      }
+    });
+    
+    if (activeLink) activeLink.classList.add("active");
+  });
+</script>
