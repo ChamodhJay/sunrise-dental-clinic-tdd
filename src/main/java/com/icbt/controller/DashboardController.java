@@ -14,7 +14,7 @@ import java.time.LocalDate;
 @WebServlet("/dashboard")
 public final class DashboardController extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private final DashboardService dashboardService = new DashboardService();
+    private transient DashboardService dashboardService = new DashboardService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
