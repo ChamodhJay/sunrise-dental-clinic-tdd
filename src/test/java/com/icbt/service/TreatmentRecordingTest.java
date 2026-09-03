@@ -94,6 +94,34 @@ public class TreatmentRecordingTest {
     }
 
     @Test
+    public void missingAppointmentIdIsRejectedBeforeDatabaseAccess() {
+        StaffUser dentistUser = user(StaffRole.DENTIST, true);
+
+        BusinessRuleException exception = assertThrows(
+                BusinessRuleException.class,
+                () -> appointmentService.recordTreatment(
+                        null, dentistUser, "Diagnosis", "Treatment notes"));
+
+        assertEquals("Select a valid appointment.", exception.getMessage());
+        verifyNoInteractions(referenceDataDAO, appointmentDAO);
+    }
+
+    @Test
+    public void treatmentTextIsTrimmedBeforeSaving() {
+        StaffUser dentistUser = user(StaffRole.DENTIST, true);
+        Dentist dentist = new Dentist(UUID.randomUUID(), dentistUser, true);
+        UUID appointmentId = UUID.randomUUID();
+        when(referenceDataDAO.findDentistByStaffUserId(dentistUser.getUserId()))
+                .thenReturn(Optional.of(dentist));
+
+        appointmentService.recordTreatment(
+                appointmentId, dentistUser, "  Dental caries  ", "  Filling completed  ");
+
+        verify(appointmentDAO).recordTreatment(
+                appointmentId, dentist.getDentistId(), "Dental caries", "Filling completed");
+    }
+
+    @Test
     public void dentistWithoutProfileCannotRecordTreatment() {
         StaffUser dentistUser = user(StaffRole.DENTIST, true);
         when(referenceDataDAO.findDentistByStaffUserId(dentistUser.getUserId()))
