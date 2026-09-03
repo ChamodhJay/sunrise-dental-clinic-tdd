@@ -16,9 +16,18 @@ public final class CatalogueController extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private transient CatalogueService catalogueService;
 
+    public CatalogueController() {
+    }
+
+    CatalogueController(CatalogueService catalogueService) {
+        this.catalogueService = catalogueService;
+    }
+
     @Override
     public void init() {
-        catalogueService = new CatalogueService();
+        if (catalogueService == null) {
+            catalogueService = new CatalogueService();
+        }
     }
 
     @Override
@@ -57,7 +66,14 @@ public final class CatalogueController extends HttpServlet {
             throws ServletException, IOException {
         try {
             request.setAttribute("treatments", catalogueService.treatments(WebSupport.user(request)));
-            request.setAttribute("activeFee", catalogueService.activeFee(WebSupport.user(request)));
+            try {
+                request.setAttribute("activeFee", catalogueService.activeFee(WebSupport.user(request)));
+            } catch (BusinessRuleException exception) {
+                if (request.getAttribute("catalogueError") == null) {
+                    response.setStatus(HttpServletResponse.SC_CONFLICT);
+                    request.setAttribute("catalogueError", exception.getMessage());
+                }
+            }
             request.getRequestDispatcher("/WEB-INF/view/catalogue.jsp").forward(request, response);
         } catch (DataAccessException exception) {
             WebSupport.error(request, response, HttpServletResponse.SC_SERVICE_UNAVAILABLE,
