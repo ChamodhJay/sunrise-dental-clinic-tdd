@@ -2,6 +2,7 @@
   --blue-900: #1a233a; /* Dark sidebar */
   --blue-800: #2c3e50;
   --blue-700: #3484f0; /* Action blue */
+  --blue-600: #2563eb;
   --blue-100: #eaf2fb;
   --blue-50: #f5f9fd;
   --blue-10: #f8fbff;
@@ -926,6 +927,15 @@ textarea {
   color: var(--text-dark);
   background: var(--page);
   border-color: #a0aec0;
+}
+
+.button:focus-visible,
+.main-nav a:focus-visible,
+.link-button:focus-visible,
+.password-toggle:focus-visible,
+.modal-close:focus-visible {
+  outline: 3px solid #f59e0b;
+  outline-offset: 2px;
 }
 
 .button.danger {
