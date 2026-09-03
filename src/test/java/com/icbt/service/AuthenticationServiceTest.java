@@ -132,6 +132,21 @@ public class AuthenticationServiceTest {
         verify(userDAO, times(4)).findByUsername("reception");
     }
 
+    @Test
+    public void newIdentityIsStillThrottledWhenAttemptTrackerIsFull() {
+        authenticationService = new AuthenticationService(userDAO, passwordHasher, clock, 1);
+        when(userDAO.findByUsername(any(String.class))).thenReturn(Optional.empty());
+
+        failedAuthentication("first-user", CLIENT_ADDRESS);
+        AuthenticationException first = failedAuthentication("second-user", CLIENT_ADDRESS);
+        AuthenticationException second = failedAuthentication("second-user", CLIENT_ADDRESS);
+        AuthenticationException third = failedAuthentication("second-user", CLIENT_ADDRESS);
+
+        assertEquals("Invalid username or password", first.getMessage());
+        assertEquals("Invalid username or password", second.getMessage());
+        assertEquals(30, third.getRetryAfterSeconds());
+    }
+
     private AuthenticationException failedAuthentication(String username, String clientAddress) {
         return assertThrows(AuthenticationException.class,
                 () -> authenticationService.authenticate(
