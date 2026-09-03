@@ -2,6 +2,7 @@
   --blue-900: #1a233a; /* Dark sidebar */
   --blue-800: #2c3e50;
   --blue-700: #3484f0; /* Action blue */
+  --blue-600: #2563eb;
   --blue-100: #eaf2fb;
   --blue-50: #f5f9fd;
   --blue-10: #f8fbff;
@@ -928,6 +929,15 @@ textarea {
   border-color: #a0aec0;
 }
 
+.button:focus-visible,
+.main-nav a:focus-visible,
+.link-button:focus-visible,
+.password-toggle:focus-visible,
+.modal-close:focus-visible {
+  outline: 3px solid #f59e0b;
+  outline-offset: 2px;
+}
+
 .button.danger {
   color: var(--white);
   background: var(--danger);
@@ -1300,9 +1310,6 @@ tbody tr:hover > td {
 .input-icon.left-icon {
   left: 1rem;
 }
-.input-icon.right-icon {
-  right: 1rem;
-}
 .input-wrapper input {
   padding-left: 2.75rem;
   padding-top: 0.85rem;
@@ -1314,6 +1321,30 @@ tbody tr:hover > td {
 .input-wrapper input:focus {
   background: white;
   border-color: var(--blue-700);
+}
+
+.input-wrapper #password {
+  padding-right: 3rem;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.65rem;
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.password-toggle:hover {
+  background: #f1f5f9;
+  color: var(--blue-900);
 }
 
 .password-label-row {
@@ -1328,25 +1359,6 @@ tbody tr:hover > td {
 .forgot-link {
   font-size: 0.75rem;
   font-weight: 600;
-}
-
-.keep-signed-in {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  margin-bottom: 1.5rem;
-}
-.keep-signed-in label {
-  font-size: 0.85rem;
-  color: var(--muted);
-  font-weight: 400;
-  margin: 0;
-}
-.keep-signed-in input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
 }
 
 .login-card .button {

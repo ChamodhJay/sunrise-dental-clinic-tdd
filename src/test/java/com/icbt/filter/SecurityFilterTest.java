@@ -96,6 +96,26 @@ public class SecurityFilterTest {
         assertEquals("", ((StaffUser) principal.getValue()).getPasswordHash());
     }
 
+    @Test
+    public void malformedCsrfSessionAttributeIsRejectedWithoutServerError() throws Exception {
+        StaffUser user = user();
+        HttpSession session = mock(HttpSession.class);
+        RequestDispatcher dispatcher = mock(RequestDispatcher.class);
+        when(request.getMethod()).thenReturn("POST");
+        when(request.getServletPath()).thenReturn("/appointments");
+        when(request.getSession(false)).thenReturn(session);
+        when(session.getAttribute(WebSupport.AUTH_USER)).thenReturn(user);
+        when(session.getAttribute(WebSupport.CSRF_TOKEN)).thenReturn(12345);
+        when(staffUserDAO.findById(user.getUserId())).thenReturn(Optional.of(user));
+        when(request.getRequestDispatcher("/WEB-INF/view/error.jsp")).thenReturn(dispatcher);
+
+        filter.doFilter(request, response, chain);
+
+        verify(response).setStatus(HttpServletResponse.SC_FORBIDDEN);
+        verify(dispatcher).forward(request, response);
+        verify(chain, never()).doFilter(request, response);
+    }
+
     private StaffUser user() {
         return new StaffUser(UUID.randomUUID(), "reception", "sensitive-hash", "Receptionist",
                 StaffRole.RECEPTIONIST, true, LocalDateTime.of(2026, 8, 20, 9, 0));

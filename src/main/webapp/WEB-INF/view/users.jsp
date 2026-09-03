@@ -129,11 +129,11 @@
   </div>
 </main>
 
-<div id="resetModal" class="modal-overlay" style="display: none;">
+<div id="resetModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="resetModalTitle">
   <div class="modal">
     <div class="modal-header">
-      <h3>Reset User Password</h3>
-      <button type="button" class="modal-close" onclick="closeResetModal()">&times;</button>
+      <h3 id="resetModalTitle">Reset User Password</h3>
+      <button type="button" class="modal-close" onclick="closeResetModal()" aria-label="Close password reset">&times;</button>
     </div>
     <div class="modal-body">
       <form action="${pageContext.request.contextPath}/users" method="post">
@@ -148,8 +148,8 @@
         </div>
         
         <div class="field">
-          <label for="confirmPassword">Confirm new password</label>
-          <input id="confirmPassword" name="confirmPassword" type="password" minlength="10" maxlength="128" autocomplete="new-password" required>
+          <label for="resetConfirmPassword">Confirm new password</label>
+          <input id="resetConfirmPassword" name="confirmPassword" type="password" minlength="10" maxlength="128" autocomplete="new-password" required>
           <c:if test="${submittedAction eq 'resetPassword' and not empty fieldErrors.confirmPassword}"><p class="field-error"><c:out value="${fieldErrors.confirmPassword}" /></p></c:if>
         </div>
         
@@ -163,13 +163,38 @@
 </div>
 
 <script>
+  const resetModal = document.getElementById('resetModal');
+  let resetReturnFocus = null;
+
   function openResetModal(userId) {
+    resetReturnFocus = document.activeElement;
     document.getElementById('resetModalUserId').value = userId;
-    document.getElementById('resetModal').classList.add('open');
+    resetModal.classList.add('open');
+    document.getElementById('newPassword').focus();
   }
+
   function closeResetModal() {
-    document.getElementById('resetModal').classList.remove('open');
+    resetModal.classList.remove('open');
+    if (resetReturnFocus) {
+      resetReturnFocus.focus();
+    }
   }
+
+  resetModal.addEventListener('click', function (event) {
+    if (event.target === resetModal) {
+      closeResetModal();
+    }
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && resetModal.classList.contains('open')) {
+      closeResetModal();
+    }
+  });
+
+  <c:if test="${submittedAction eq 'resetPassword'}">
+  openResetModal(document.getElementById('resetModalUserId').value);
+  </c:if>
 </script>
 <%@ include file="fragments/footer.jspf" %>
 </body>

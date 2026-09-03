@@ -26,6 +26,7 @@ public final class AuthenticationService {
     private final StaffUserDAO userDAO;
     private final PasswordHasher passwordHasher;
     private final Clock clock;
+    private final int maxTrackedAttempts;
     private final ConcurrentHashMap<String, AttemptState> attempts = new ConcurrentHashMap<>();
     private final AtomicInteger authenticationCount = new AtomicInteger();
 
@@ -34,9 +35,18 @@ public final class AuthenticationService {
     }
 
     AuthenticationService(StaffUserDAO userDAO, PasswordHasher passwordHasher, Clock clock) {
+        this(userDAO, passwordHasher, clock, MAX_TRACKED_ATTEMPTS);
+    }
+
+    AuthenticationService(StaffUserDAO userDAO, PasswordHasher passwordHasher, Clock clock,
+            int maxTrackedAttempts) {
+        if (maxTrackedAttempts < 1) {
+            throw new IllegalArgumentException("maxTrackedAttempts must be positive");
+        }
         this.userDAO = userDAO;
         this.passwordHasher = passwordHasher;
         this.clock = clock;
+        this.maxTrackedAttempts = maxTrackedAttempts;
     }
 
     public StaffUser authenticate(String username, char[] password, String clientAddress) {
@@ -73,9 +83,12 @@ public final class AuthenticationService {
         return user;
     }
 
-    private AttemptState recordFailure(String key, Instant now) {
-        if (attempts.size() >= MAX_TRACKED_ATTEMPTS && !attempts.containsKey(key)) {
-            return null;
+    private synchronized AttemptState recordFailure(String key, Instant now) {
+        if (attempts.size() >= maxTrackedAttempts && !attempts.containsKey(key)) {
+            var existingKey = attempts.keySet().iterator();
+            if (existingKey.hasNext()) {
+                attempts.remove(existingKey.next());
+            }
         }
         return attempts.compute(key, (ignored, state) -> {
                 int count = state == null || state.lockedUntil != null ? 1 : state.failureCount + 1;

@@ -19,17 +19,20 @@ public final class WebSupport {
 
     public static StaffUser user(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        return session == null ? null : (StaffUser) session.getAttribute(AUTH_USER);
+        Object principal = session == null ? null : session.getAttribute(AUTH_USER);
+        return principal instanceof StaffUser ? (StaffUser) principal : null;
     }
 
     public static String ensureCsrfToken(HttpSession session) {
-        String token = (String) session.getAttribute(CSRF_TOKEN);
-        if (token == null) {
-            byte[] random = new byte[32];
-            SECURE_RANDOM.nextBytes(random);
-            token = Base64.getUrlEncoder().withoutPadding().encodeToString(random);
-            session.setAttribute(CSRF_TOKEN, token);
+        Object storedToken = session.getAttribute(CSRF_TOKEN);
+        if (storedToken instanceof String && !((String) storedToken).isBlank()) {
+            return (String) storedToken;
         }
+
+        byte[] random = new byte[32];
+        SECURE_RANDOM.nextBytes(random);
+        String token = Base64.getUrlEncoder().withoutPadding().encodeToString(random);
+        session.setAttribute(CSRF_TOKEN, token);
         return token;
     }
 

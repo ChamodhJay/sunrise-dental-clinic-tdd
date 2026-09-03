@@ -4,7 +4,7 @@
   <groupId>com.icbt.app</groupId>
   <artifactId>sunrise-dental-clinic</artifactId>
   <packaging>war</packaging>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <name>Sunrise Dental Clinic Appointment and Patient Management System</name>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

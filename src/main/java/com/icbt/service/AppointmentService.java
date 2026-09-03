@@ -24,7 +24,7 @@ public final class AppointmentService {
     }
 
     AppointmentService(AppointmentDAO appointmentDAO, ReferenceDataDAO referenceDataDAO,
-                       AppointmentValidator validator, Clock clock) {
+            AppointmentValidator validator, Clock clock) {
         this.appointmentDAO = appointmentDAO;
         this.referenceDataDAO = referenceDataDAO;
         this.validator = validator;
@@ -64,20 +64,31 @@ public final class AppointmentService {
     }
 
     public void recordTreatment(UUID appointmentId, StaffUser dentistUser,
-                                String diagnosis, String treatmentNotes) {
+            String diagnosis, String treatmentNotes) {
         requireRole(dentistUser, StaffRole.DENTIST);
-        if (diagnosis == null || diagnosis.isBlank() || diagnosis.length() > 500
-                || treatmentNotes == null || treatmentNotes.isBlank() || treatmentNotes.length() > 2000) {
+        if (appointmentId == null) {
+            throw new BusinessRuleException("Select a valid appointment.");
+        }
+        String normalizedDiagnosis = diagnosis == null ? "" : diagnosis.trim();
+        String normalizedNotes = treatmentNotes == null ? "" : treatmentNotes.trim();
+        if (normalizedDiagnosis.isEmpty() || normalizedDiagnosis.length() > 500
+                || normalizedNotes.isEmpty() || normalizedNotes.length() > 2000) {
             throw new BusinessRuleException(
                     "Diagnosis and treatment notes are required and must fit the stated length limits.");
         }
         Dentist dentist = referenceDataDAO.findDentistByStaffUserId(dentistUser.getUserId())
                 .orElseThrow(() -> new BusinessRuleException("This user has no dentist profile."));
-        appointmentDAO.recordTreatment(appointmentId, dentist.getDentistId(), diagnosis, treatmentNotes);
+        appointmentDAO.recordTreatment(appointmentId, dentist.getDentistId(),
+                normalizedDiagnosis, normalizedNotes);
     }
 
-    public List<Dentist> activeDentists() { return referenceDataDAO.findActiveDentists(); }
-    public List<TreatmentType> activeTreatmentTypes() { return referenceDataDAO.findTreatmentTypes(true); }
+    public List<Dentist> activeDentists() {
+        return referenceDataDAO.findActiveDentists();
+    }
+
+    public List<TreatmentType> activeTreatmentTypes() {
+        return referenceDataDAO.findTreatmentTypes(true);
+    }
 
     private void requireRole(StaffUser user, StaffRole role) {
         if (user == null || !user.hasRole(role)) {

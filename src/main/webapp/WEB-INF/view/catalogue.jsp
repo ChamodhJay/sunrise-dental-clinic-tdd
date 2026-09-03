@@ -31,7 +31,14 @@
 
     <section class="card">
       <h2>Consultation fee</h2>
-      <p class="card-subtitle">Current fee: <strong>Rs. <fmt:formatNumber value="${activeFee.consultationFee}" minFractionDigits="2" /></strong>, effective <c:out value="${activeFee.effectiveFrom}" />.</p>
+      <c:choose>
+        <c:when test="${not empty activeFee}">
+          <p class="card-subtitle">Current fee: <strong>Rs. <fmt:formatNumber value="${activeFee.consultationFee}" minFractionDigits="2" /></strong>, effective <c:out value="${activeFee.effectiveFrom}" />.</p>
+        </c:when>
+        <c:otherwise>
+          <p class="card-subtitle">No consultation fee is active. Add one before generating patient bills.</p>
+        </c:otherwise>
+      </c:choose>
       <form class="grid" action="${pageContext.request.contextPath}/catalogue" method="post">
         <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}"><input type="hidden" name="action" value="fee">
         <div class="field span-8">

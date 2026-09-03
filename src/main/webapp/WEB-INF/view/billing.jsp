@@ -32,6 +32,7 @@
     <c:if test="${empty bill}">
       <form class="card no-print" action="${pageContext.request.contextPath}/billing" method="post" style="max-width:500px">
         <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
+        <input type="hidden" name="action" value="create">
         <div class="field">
           <label for="appointmentNumber">Appointment number</label>
           <div class="inline-search" style="width:100%">

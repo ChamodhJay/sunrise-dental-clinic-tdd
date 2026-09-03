@@ -20,9 +20,18 @@ public final class BillingController extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private transient BillingService billingService;
 
+    public BillingController() {
+    }
+
+    BillingController(BillingService billingService) {
+        this.billingService = billingService;
+    }
+
     @Override
     public void init() {
-        billingService = new BillingService();
+        if (billingService == null) {
+            billingService = new BillingService();
+        }
     }
 
     @Override
@@ -53,8 +62,17 @@ public final class BillingController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String appointmentNumber = request.getParameter("appointmentNumber");
+        String action = request.getParameter("action");
+        if (!("create".equals(action) || "print".equals(action))) {
+            badRequest(request, response, "Select a valid billing action.");
+            return;
+        }
+        if (appointmentNumber == null || appointmentNumber.isBlank()) {
+            badRequest(request, response, "Appointment number is required.");
+            return;
+        }
         try {
-            if ("print".equals(request.getParameter("action"))) {
+            if ("print".equals(action)) {
                 Bill bill = billingService.markPrinted(appointmentNumber, WebSupport.user(request));
                 request.setAttribute("bill", bill);
                 request.setAttribute("printNow", true);
@@ -84,5 +102,12 @@ public final class BillingController extends HttpServlet {
             throws ServletException, IOException {
         WebSupport.error(request, response, HttpServletResponse.SC_SERVICE_UNAVAILABLE,
                 "Billing data is temporarily unavailable. No incomplete bill was saved.");
+    }
+
+    private void badRequest(HttpServletRequest request, HttpServletResponse response, String message)
+            throws ServletException, IOException {
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        request.setAttribute("billingError", message);
+        request.getRequestDispatcher("/WEB-INF/view/billing.jsp").forward(request, response);
     }
 }

@@ -34,11 +34,12 @@ public final class SecurityFilter implements Filter {
     }
 
     @Override
-    public void init(FilterConfig filterConfig) { }
+    public void init(FilterConfig filterConfig) {
+    }
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
-                         FilterChain chain) throws IOException, ServletException {
+            FilterChain chain) throws IOException, ServletException {
         if (!(servletRequest instanceof HttpServletRequest request)
                 || !(servletResponse instanceof HttpServletResponse response)) {
             chain.doFilter(servletRequest, servletResponse);
@@ -127,9 +128,13 @@ public final class SecurityFilter implements Filter {
     }
 
     private boolean validCsrf(HttpServletRequest request, HttpSession session) {
-        String expected = (String) session.getAttribute(WebSupport.CSRF_TOKEN);
+        Object storedToken = session.getAttribute(WebSupport.CSRF_TOKEN);
+        if (!(storedToken instanceof String)) {
+            return false;
+        }
+        String expected = (String) storedToken;
         String supplied = request.getParameter("csrfToken");
-        return expected != null && supplied != null && MessageDigest.isEqual(
+        return supplied != null && MessageDigest.isEqual(
                 expected.getBytes(StandardCharsets.UTF_8), supplied.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -167,5 +172,6 @@ public final class SecurityFilter implements Filter {
     }
 
     @Override
-    public void destroy() { }
+    public void destroy() {
+    }
 }
