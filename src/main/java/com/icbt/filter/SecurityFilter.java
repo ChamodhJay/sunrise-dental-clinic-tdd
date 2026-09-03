@@ -134,7 +134,7 @@ public final class SecurityFilter implements Filter {
         }
         String expected = (String) storedToken;
         String supplied = request.getParameter("csrfToken");
-        return expected != null && supplied != null && MessageDigest.isEqual(
+        return supplied != null && MessageDigest.isEqual(
                 expected.getBytes(StandardCharsets.UTF_8), supplied.getBytes(StandardCharsets.UTF_8));
     }
 
