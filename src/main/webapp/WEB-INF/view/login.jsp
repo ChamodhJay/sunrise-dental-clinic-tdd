@@ -57,7 +57,7 @@
 
           <div class="hero-text">
             <h2>Care, connected from the moment they arrive.</h2>
-            <p>One simple, secure workspace for your receptionists, nurses, hygienists, and doctors<br>
+            <p>One simple, secure workspace for your receptionists, dentists, and clinic managers<br>
               so your clinic can run smoothly and your patients always come first.
             </p>
           </div>
@@ -177,17 +177,15 @@
                 </svg>
                 <input id="password" name="password" type="password" maxlength="128" autocomplete="current-password"
                   required>
-                <svg class="input-icon right-icon eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2" style="cursor:help;">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
+                <button id="togglePassword" class="password-toggle" type="button" aria-controls="password"
+                  aria-label="Show password" aria-pressed="false">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
               </div>
-            </div>
-
-            <div class="keep-signed-in">
-              <input type="checkbox" id="keep-signed" value="true">
-              <label for="keep-signed">Keep me signed in on this device</label>
             </div>
 
             <button class="button" type="submit">
@@ -203,6 +201,16 @@
             Clinic staff.</p>
         </main>
       </div>
+      <script>
+        const password = document.getElementById('password');
+        const togglePassword = document.getElementById('togglePassword');
+        togglePassword.addEventListener('click', function () {
+          const showPassword = password.type === 'password';
+          password.type = showPassword ? 'text' : 'password';
+          togglePassword.setAttribute('aria-pressed', String(showPassword));
+          togglePassword.setAttribute('aria-label', showPassword ? 'Hide password' : 'Show password');
+        });
+      </script>
     </body>
 
     </html>
